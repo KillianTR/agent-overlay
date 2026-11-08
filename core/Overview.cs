@@ -145,8 +145,10 @@ public static partial class Overview
     {
         string title = session.Title != "" ? session.Title : Path.GetFileName(session.Cwd.TrimEnd('\\', '/'));
         title = Symbols().Replace(title, " ").Trim();
-        if (title == "") return Loc.T("Claude 세션", "Claude session");
-        return title.Length <= 24 ? title : title[..24];
+        string prefix = session.Provider == "Antigravity" ? "Antigravity " : "";
+        if (title == "") return Loc.T($"{prefix}세션", $"{prefix}Session");
+        string shortTitle = title.Length <= 24 ? title : title[..24];
+        return $"{prefix}{shortTitle}";
     }
 
     [GeneratedRegex(@"[^\p{L}\p{N}\s]+")]

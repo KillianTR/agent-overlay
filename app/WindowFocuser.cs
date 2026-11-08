@@ -1,3 +1,4 @@
+using System.IO;
 using System.Diagnostics;
 
 namespace ClaudeSessionOverlay;
@@ -8,6 +9,11 @@ internal static class WindowFocuser
     public static bool Focus(SessionInfo session)
     {
         if (!session.IsAlive) return false;
+
+        if (session.Provider == "Antigravity")
+        {
+            return FocusAntigravityWindow(session);
+        }
 
         // 데스크톱 앱 세션: 딥 링크는 늘 첫 번째 분할 화면을 바꾸므로, 이미 어느 화면에 떠 있으면 딥 링크 없이
         // 그 화면의 입력창으로 포커스만 옮긴다. 떠 있지 않으면 딥 링크로 첫 화면에 연다
@@ -154,5 +160,44 @@ internal static class WindowFocuser
                 await Task.Delay(100);
             }
         });
+    }
+
+    private static bool FocusAntigravityWindow(SessionInfo session)
+    {
+        var procs = Process.GetProcessesByName("Antigravity");
+        foreach (var p in procs)
+        {
+            IntPtr hwnd = MainWindowOf((uint)p.Id);
+            if (hwnd != IntPtr.Zero && BringToFront(hwnd)) return true;
+        }
+
+        IntPtr candidate = IntPtr.Zero;
+        string folder = string.IsNullOrEmpty(session.Cwd) ? "" : Path.GetFileName(session.Cwd.TrimEnd('\\', '/'));
+        Native.EnumWindows((hwnd, _) =>
+        {
+            if (!Native.IsWindowVisible(hwnd)) return true;
+            int len = Native.GetWindowTextLength(hwnd);
+            if (len == 0) return true;
+            var sb = new System.Text.StringBuilder(len + 1);
+            Native.GetWindowText(hwnd, sb, sb.Capacity);
+            string text = sb.ToString();
+
+            if (text.Contains("Antigravity", StringComparison.OrdinalIgnoreCase))
+            {
+                candidate = hwnd;
+                return false;
+            }
+            if (!string.IsNullOrEmpty(folder) && text.Contains(folder, StringComparison.OrdinalIgnoreCase))
+            {
+                candidate = hwnd;
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        if (candidate != IntPtr.Zero)
+        {
+            return BringToFront(candidate);
+        }
+        return false;
     }
 }

@@ -79,7 +79,11 @@ public sealed class SessionRow : INotifyPropertyChanged
         {
             // 모델 · 비용 · 경로: 같은 저장소를 C:·D:에 둬도 드라이브로 구분된다(줄이 넘치면 경로 끝이 잘린다)
             var parts = new List<string>();
-            if (Info.Measure is { } m)
+            if (Info.Provider == "Antigravity")
+            {
+                parts.Add("Antigravity");
+            }
+            else if (Info.Measure is { } m)
             {
                 if (m.Model != "") parts.Add(m.Model.Replace("claude-", ""));
                 if (m.CostUsd is double usd) parts.Add($"${usd:0.00}");

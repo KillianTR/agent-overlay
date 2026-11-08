@@ -23,8 +23,8 @@ public static class Loc
     /// <summary>XAML에서 쓰는 문구: 키 → (한국어, 영어)</summary>
     public static readonly IReadOnlyDictionary<string, (string Ko, string En)> Xaml = new Dictionary<string, (string, string)>
     {
-        ["L_AppTitle"] = ("Claude 세션", "Claude Sessions"),
-        ["L_WindowTitle"] = ("Claude 세션 오버레이", "Claude Session Overlay"),
+        ["L_AppTitle"] = ("Agent Overlay", "Agent Overlay"),
+        ["L_WindowTitle"] = ("Agent Overlay", "Agent Overlay"),
         ["L_Open"] = ("열기", "Open"),
         ["L_MarkSeen"] = ("확인 처리 (목록에서 숨기기)", "Mark as seen (hide from list)"),
         ["L_ToggleFavorite"] = ("즐겨찾기 추가/해제", "Add/remove favorite"),

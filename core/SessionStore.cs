@@ -114,8 +114,22 @@ public sealed partial class SessionStore
             if (info.Status == LiveStatus.Working && hud.TurnStartedAt is double t) info.TurnStartedAt = t;
         }
 
+        foreach (var agy in AntigravityStore.LoadSessions())
+        {
+            if (!sessions.ContainsKey(agy.SessionId))
+            {
+                sessions[agy.SessionId] = agy;
+            }
+        }
+
         foreach (var info in sessions.Values)
         {
+            if (info.Provider == "Antigravity")
+            {
+                TrackCompletion(info);
+                info.SeenAt = Math.Max(info.SeenAt, State.SeenAt.GetValueOrDefault(info.SessionId));
+                continue;
+            }
             string? desktopModel = null;
             if (info.HostSessionId is string host && LoadDesktopDoc(host) is { } desk)
             {

@@ -49,6 +49,7 @@ public partial class App : Application
                 + string.Concat(r.Tasks.Select(t => $"\n    {t.Label} ({t.StatusText})")));
             var all = sessions.Select(s =>
                 $"{s.Status,-8} alive={s.IsAlive} seen={s.SeenAt:0} done={s.LastCompletedAt:0} parent={s.ParentHostSessionId} | {s.Title}");
+            Directory.CreateDirectory(SessionStore.Root);
             System.IO.File.WriteAllText(System.IO.Path.Combine(SessionStore.Root, "dump.txt"),
                 "사용량: " + dumpStore.Usage + "\n\n보이는 줄:\n" + string.Join("\n", shown) + "\n\n전체 세션:\n" + string.Join("\n", all)
                 + "\n\n분할 화면에 떠 있는 데스크톱 세션: " + string.Join(", ", DesktopPanes.ShownSessionIds()));

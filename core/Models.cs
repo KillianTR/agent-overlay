@@ -141,6 +141,7 @@ public enum LiveStatus { Working, Waiting, Idle }
 public sealed class SessionInfo
 {
     public required string SessionId { get; init; }
+    public string Provider { get; set; } = "Claude";
     public int? Pid { get; set; }
     public string Cwd { get; set; } = "";
     public string Title { get; set; } = "";
