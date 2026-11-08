@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0bin\ClaudeSessionOverlay.exe"
+start "" "%~dp0bin\AgentOverlay.exe"
