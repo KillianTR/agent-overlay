@@ -114,7 +114,7 @@ public sealed class OverlayState
     public bool IsCollapsed { get; set; }
     public HashSet<string> ExpandedTasks { get; set; } = [];
     public bool IsSoundOn { get; set; } = true;
-    public bool IsVoiceOn { get; set; } = true;
+    public bool IsVoiceOn { get; set; } = false;
     public OverlayTheme Theme { get; set; } = OverlayTheme.Dark;
     public UiLanguage Language { get; set; } = UiLanguage.System;
     /// <summary>처음 실행할 때 로그인 시 실행할지 이미 물었다</summary>

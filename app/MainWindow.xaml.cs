@@ -494,22 +494,38 @@ public partial class MainWindow : Window
 
     private void PlaceWindow()
     {
-        var work = SystemParameters.WorkArea;
-        double left = _store.State.Left ?? work.Right - Width - 16;
-        double top = _store.State.Top ?? work.Top + 16;
-        // 모니터 구성이 바뀌어 화면 밖이면 기본 위치로
+        // Detect Screen 2 (pantalla 2) if present, or fallback to main screen
+        var screens = System.Windows.Forms.Screen.AllScreens;
+        var screen2 = screens.Length > 1
+            ? (screens.FirstOrDefault(s => !s.Primary) ?? screens[1])
+            : screens[0];
+        var work = screen2.WorkingArea;
+
+        // Dock to the right edge of Screen 2 (like an Apple taskbar/dock)
+        double defaultLeft = work.Right - Width - 16;
+        double defaultTop = work.Top + 32;
+
+        double left = _store.State.Left ?? defaultLeft;
+        double top = _store.State.Top ?? defaultTop;
+
         bool isOnScreen = left > SystemParameters.VirtualScreenLeft - Width + 40
             && left < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 40
             && top > SystemParameters.VirtualScreenTop - 10
             && top < SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 40;
-        Left = isOnScreen ? left : work.Right - Width - 16;
-        Top = isOnScreen ? top : work.Top + 16;
+
+        Left = isOnScreen ? left : defaultLeft;
+        Top = isOnScreen ? top : defaultTop;
     }
 
     public void ResetPosition()
     {
-        _store.State.Left = null;
-        _store.State.Top = null;
+        var screens = System.Windows.Forms.Screen.AllScreens;
+        var screen2 = screens.Length > 1
+            ? (screens.FirstOrDefault(s => !s.Primary) ?? screens[1])
+            : screens[0];
+        var work = screen2.WorkingArea;
+        _store.State.Left = work.Right - Width - 16;
+        _store.State.Top = work.Top + 32;
         PlaceWindow();
         SaveWindowPosition();
     }

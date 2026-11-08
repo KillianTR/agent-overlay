@@ -30,8 +30,7 @@ internal sealed class Notifier : IDisposable
         }
         catch { _voice = null; }
 
-        try { _chime = File.Exists(ChimeFile) ? new SoundPlayer(ChimeFile) : null; }
-        catch { _chime = null; }
+        _chime = LoadIosChime();
 
         SystemEvents.SessionSwitch += OnSessionSwitch;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
@@ -151,4 +150,17 @@ internal sealed class Notifier : IDisposable
         _voice?.Dispose();
         _chime?.Dispose();
     }
+
+    private static SoundPlayer? LoadIosChime()
+    {
+        try
+        {
+            var stream = typeof(Notifier).Assembly.GetManifestResourceStream("ios_notification.wav");
+            if (stream != null) return new SoundPlayer(stream);
+            if (File.Exists(ChimeFile)) return new SoundPlayer(ChimeFile);
+        }
+        catch { }
+        return null;
+    }
+
 }
