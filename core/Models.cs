@@ -110,6 +110,7 @@ public sealed class OverlayState
     public Dictionary<string, double> SeenAt { get; set; } = [];
     public double? Left { get; set; }
     public double? Top { get; set; }
+    public double? Bottom { get; set; }
     public bool IsHidden { get; set; }
     public bool IsCollapsed { get; set; }
     public HashSet<string> ExpandedTasks { get; set; } = [];

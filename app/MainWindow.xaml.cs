@@ -321,7 +321,7 @@ public partial class MainWindow : Window
         ThemeDarkItem.IsChecked = mode == OverlayTheme.Dark;
         ThemeLightItem.IsChecked = mode == OverlayTheme.Light;
         ThemeSystemItem.IsChecked = mode == OverlayTheme.System;
-        HeaderCollapseItem.Header = IsCollapsed ? Loc.T("목록 펼치기", "Expand list") : Loc.T("목록 접기", "Collapse list");
+        HeaderCollapseItem.Header = IsCollapsed ? Loc.T("위로 펼치기", "Expand upwards") : Loc.T("아래로 접기", "Collapse");
         var language = _store.State.Language;
         LangKoItem.IsChecked = language == UiLanguage.Korean;
         LangEnItem.IsChecked = language == UiLanguage.English;
@@ -441,8 +441,9 @@ public partial class MainWindow : Window
     {
         bool isCollapsed = _store.State.IsCollapsed;
         Body.Visibility = isCollapsed ? Visibility.Collapsed : Visibility.Visible;
-        CollapseButton.Content = isCollapsed ? "▾" : "▴";
-        CollapseButton.ToolTip = isCollapsed ? Loc.T("펼치기", "Expand") : Loc.T("접기 (머리 줄만 보기)", "Collapse (header only)");
+        if (BodySeparator != null) BodySeparator.Visibility = isCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        CollapseButton.Content = isCollapsed ? "▴" : "▾";
+        CollapseButton.ToolTip = isCollapsed ? Loc.T("위로 펼치기", "Expand upwards") : Loc.T("아래로 접기", "Collapse");
     }
 
     private void Collapse_Click(object sender, RoutedEventArgs e) => ToggleCollapsed();
@@ -468,7 +469,35 @@ public partial class MainWindow : Window
         encoder.Save(file);
     }
 
-    // ── 위치 ────────────────────────────────────────────────────────────
+    // -- Upward Expansion & Bottom Anchor ---------------------------------
+
+    private double? _anchorBottom;
+
+    private void UpdateAnchorBottom()
+    {
+        if (ActualHeight > 0)
+        {
+            _anchorBottom = Top + ActualHeight;
+            _store.State.Bottom = _anchorBottom;
+        }
+    }
+
+    protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+    {
+        base.OnRenderSizeChanged(sizeInfo);
+        if (sizeInfo.HeightChanged && sizeInfo.NewSize.Height > 0)
+        {
+            if (_anchorBottom.HasValue)
+            {
+                Top = _anchorBottom.Value - sizeInfo.NewSize.Height;
+            }
+            else if (Top > 0)
+            {
+                _anchorBottom = Top + sizeInfo.NewSize.Height;
+                _store.State.Bottom = _anchorBottom;
+            }
+        }
+    }
 
     private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -479,24 +508,25 @@ public partial class MainWindow : Window
             return;
         }
         DragMove();
+        UpdateAnchorBottom();
         SaveWindowPosition();
     }
 
     private void PlaceWindow()
     {
-        // Detect Screen 2 (pantalla 2) if present, or fallback to main screen
         var screens = System.Windows.Forms.Screen.AllScreens;
         var screen2 = screens.Length > 1
             ? (screens.FirstOrDefault(s => !s.Primary) ?? screens[1])
             : screens[0];
         var work = screen2.WorkingArea;
 
-        // Dock to the right edge of Screen 2 (like an Apple taskbar/dock)
         double defaultLeft = work.Right - Width - 16;
-        double defaultTop = work.Top + 32;
+        double defaultBottom = work.Bottom - 16;
+        double defaultTop = defaultBottom - 64;
 
         double left = _store.State.Left ?? defaultLeft;
         double top = _store.State.Top ?? defaultTop;
+        double? bottom = _store.State.Bottom;
 
         bool isOnScreen = left > SystemParameters.VirtualScreenLeft - Width + 40
             && left < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 40
@@ -505,6 +535,8 @@ public partial class MainWindow : Window
 
         Left = isOnScreen ? left : defaultLeft;
         Top = isOnScreen ? top : defaultTop;
+        _anchorBottom = (isOnScreen && bottom.HasValue) ? bottom.Value : (Top + 64);
+        _store.State.Bottom = _anchorBottom;
     }
 
     public void ResetPosition()
@@ -515,7 +547,8 @@ public partial class MainWindow : Window
             : screens[0];
         var work = screen2.WorkingArea;
         _store.State.Left = work.Right - Width - 16;
-        _store.State.Top = work.Top + 32;
+        _store.State.Bottom = work.Bottom - 16;
+        _store.State.Top = _store.State.Bottom - 64;
         PlaceWindow();
         SaveWindowPosition();
     }
@@ -524,6 +557,14 @@ public partial class MainWindow : Window
     {
         _store.State.Left = Left;
         _store.State.Top = Top;
+        if (_anchorBottom.HasValue)
+        {
+            _store.State.Bottom = _anchorBottom.Value;
+        }
+        else if (ActualHeight > 0)
+        {
+            _store.State.Bottom = Top + ActualHeight;
+        }
         _store.SaveState();
     }
 }

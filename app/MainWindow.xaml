@@ -128,56 +128,8 @@
             <DropShadowEffect BlurRadius="24" ShadowDepth="3" Opacity="0.45"/>
         </Border.Effect>
         <StackPanel>
-            <!-- 머리: 끌어서 옮기기 -->
-            <Grid x:Name="Header" Height="28" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
-                <Grid.ContextMenu>
-                    <ContextMenu Opened="HeaderMenu_Opened">
-                        <MenuItem Header="{DynamicResource L_Theme}">
-                            <MenuItem x:Name="ThemeDarkItem" Header="{DynamicResource L_Dark}" Tag="Dark" Click="ThemeItem_Click"/>
-                            <MenuItem x:Name="ThemeLightItem" Header="{DynamicResource L_Light}" Tag="Light" Click="ThemeItem_Click"/>
-                            <MenuItem x:Name="ThemeSystemItem" Header="{DynamicResource L_FollowWindows}" Tag="System" Click="ThemeItem_Click"/>
-                        </MenuItem>
-                        <MenuItem Header="{DynamicResource L_Language}">
-                            <MenuItem x:Name="LangKoItem" Header="한국어" Tag="Korean" Click="LanguageItem_Click"/>
-                            <MenuItem x:Name="LangEnItem" Header="English" Tag="English" Click="LanguageItem_Click"/>
-                            <MenuItem x:Name="LangSystemItem" Header="{DynamicResource L_FollowWindows}" Tag="System" Click="LanguageItem_Click"/>
-                        </MenuItem>
-                        <Separator/>
-                        <MenuItem x:Name="HeaderCollapseItem" Click="HeaderCollapse_Click"/>
-                        <MenuItem Header="{DynamicResource L_ShowSeen}" Click="HeaderShowSeen_Click"/>
-                        <MenuItem Header="{DynamicResource L_HideToTray}" Click="HeaderHide_Click"/>
-                    </ContextMenu>
-                </Grid.ContextMenu>
-                <!-- 요약이 길면 요약 글자를 줄이고, 주간 바는 늘 보이게 -->
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <DockPanel VerticalAlignment="Center" Margin="6,0,0,0" LastChildFill="True">
-                    <Ellipse DockPanel.Dock="Left" Width="9" Height="9" Fill="{StaticResource AccentBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                    <TextBlock DockPanel.Dock="Left" Text="{DynamicResource L_AppTitle}" Foreground="{DynamicResource TextBrush}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="SummaryText" Foreground="{DynamicResource SubtleBrush}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis"/>
-                </DockPanel>
-                <!-- 주간 사용량 바: 계정 단위라 머리 줄에 하나 -->
-                <StackPanel x:Name="WeeklyPanel" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                            VerticalAlignment="Center" Margin="8,0,8,0" Visibility="Collapsed">
-                    <TextBlock Text="{DynamicResource L_Weekly}" Foreground="{DynamicResource SubtleBrush}" FontSize="10.5" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                    <Border Width="52" Height="4" CornerRadius="2" Background="{DynamicResource TrackBrush}" VerticalAlignment="Center">
-                        <Border x:Name="WeeklyFill" HorizontalAlignment="Left" CornerRadius="2"/>
-                    </Border>
-                    <TextBlock x:Name="WeeklyText" FontSize="10.5" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="CollapseButton" Style="{StaticResource IconButton}" Content="▴" FontSize="11"
-                             Click="Collapse_Click"/>
-                    <Button Style="{StaticResource IconButton}" Content="–" ToolTip="{DynamicResource L_Minimize}" Click="Minimize_Click"/>
-                    <Button Style="{StaticResource IconButton}" Content="✕" FontSize="11" ToolTip="{DynamicResource L_Close}" Click="Close_Click"/>
-                </StackPanel>
-            </Grid>
-
-            <StackPanel x:Name="Body">
+            <StackPanel x:Name="Body" Margin="0,0,0,4" Visibility="Collapsed">
+            <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="RowList" Focusable="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type core:SessionRow}">
@@ -261,12 +213,65 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
+            </ScrollViewer>
+
             <TextBlock x:Name="EmptyText" Text="{DynamicResource L_Empty}" Foreground="{DynamicResource SubtleBrush}"
                        FontSize="11.5" Margin="8,2,8,4"/>
             </StackPanel>
 
+            <Border x:Name="BodySeparator" Height="1" Background="{DynamicResource CardBorderBrush}" Margin="4,0,4,4" Visibility="Collapsed"/>
+
+            <!-- 머리: 끌어서 옮기기 -->
+            <Grid x:Name="Header" Height="28" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <Grid.ContextMenu>
+                    <ContextMenu Opened="HeaderMenu_Opened">
+                        <MenuItem Header="{DynamicResource L_Theme}">
+                            <MenuItem x:Name="ThemeDarkItem" Header="{DynamicResource L_Dark}" Tag="Dark" Click="ThemeItem_Click"/>
+                            <MenuItem x:Name="ThemeLightItem" Header="{DynamicResource L_Light}" Tag="Light" Click="ThemeItem_Click"/>
+                            <MenuItem x:Name="ThemeSystemItem" Header="{DynamicResource L_FollowWindows}" Tag="System" Click="ThemeItem_Click"/>
+                        </MenuItem>
+                        <MenuItem Header="{DynamicResource L_Language}">
+                            <MenuItem x:Name="LangKoItem" Header="한국어" Tag="Korean" Click="LanguageItem_Click"/>
+                            <MenuItem x:Name="LangEnItem" Header="English" Tag="English" Click="LanguageItem_Click"/>
+                            <MenuItem x:Name="LangSystemItem" Header="{DynamicResource L_FollowWindows}" Tag="System" Click="LanguageItem_Click"/>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem x:Name="HeaderCollapseItem" Click="HeaderCollapse_Click"/>
+                        <MenuItem Header="{DynamicResource L_ShowSeen}" Click="HeaderShowSeen_Click"/>
+                        <MenuItem Header="{DynamicResource L_HideToTray}" Click="HeaderHide_Click"/>
+                    </ContextMenu>
+                </Grid.ContextMenu>
+                <!-- 요약이 길면 요약 글자를 줄이고, 주간 바는 늘 보이게 -->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <DockPanel VerticalAlignment="Center" Margin="6,0,0,0" LastChildFill="True">
+                    <Ellipse DockPanel.Dock="Left" Width="9" Height="9" Fill="{StaticResource AccentBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                    <TextBlock DockPanel.Dock="Left" Text="{DynamicResource L_AppTitle}" Foreground="{DynamicResource TextBrush}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="SummaryText" Foreground="{DynamicResource SubtleBrush}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                </DockPanel>
+                <!-- 주간 사용량 바: 계정 단위라 머리 줄에 하나 -->
+                <StackPanel x:Name="WeeklyPanel" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Margin="8,0,8,0" Visibility="Collapsed">
+                    <TextBlock Text="{DynamicResource L_Weekly}" Foreground="{DynamicResource SubtleBrush}" FontSize="10.5" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <Border Width="52" Height="4" CornerRadius="2" Background="{DynamicResource TrackBrush}" VerticalAlignment="Center">
+                        <Border x:Name="WeeklyFill" HorizontalAlignment="Left" CornerRadius="2"/>
+                    </Border>
+                    <TextBlock x:Name="WeeklyText" FontSize="10.5" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="CollapseButton" Style="{StaticResource IconButton}" Content="▴" FontSize="11"
+                             Click="Collapse_Click"/>
+                    <Button Style="{StaticResource IconButton}" Content="–" ToolTip="{DynamicResource L_Minimize}" Click="Minimize_Click"/>
+                    <Button Style="{StaticResource IconButton}" Content="✕" FontSize="11" ToolTip="{DynamicResource L_Close}" Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+
             <!-- 맨 아래 줄: [테마] 5시간 사용량 [음성 알림]. 접어도 보인다 -->
-            <Grid x:Name="FooterPanel" Margin="2,4,2,0">
+            <Grid x:Name="FooterPanel" Margin="2,4,2,0" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
