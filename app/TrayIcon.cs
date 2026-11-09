@@ -16,7 +16,6 @@ internal sealed class TrayIcon : IDisposable
     private readonly Forms.ToolStripMenuItem _collapseItem;
     private readonly Forms.ToolStripMenuItem _autostartItem;
     private readonly Forms.ToolStripMenuItem _soundItem;
-    private readonly Forms.ToolStripMenuItem _voiceItem;
 
     public TrayIcon(MainWindow window)
     {
@@ -30,7 +29,6 @@ internal sealed class TrayIcon : IDisposable
         };
 
         _soundItem = new Forms.ToolStripMenuItem("", null, (_, _) => _window.ToggleSound());
-        _voiceItem = new Forms.ToolStripMenuItem("", null, (_, _) => _window.ToggleVoice());
 
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add(_toggleItem);
@@ -43,7 +41,6 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add(resetItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(_soundItem);
-        menu.Items.Add(_voiceItem);
         menu.Items.Add(testItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(_autostartItem);
@@ -57,13 +54,11 @@ internal sealed class TrayIcon : IDisposable
             showSeenItem.Text = Loc.T("확인한 세션 다시 보기", "Show seen sessions again");
             resetItem.Text = Loc.T("위치 초기화", "Reset position");
             _soundItem.Text = Loc.T("알림 소리", "Notification sound");
-            _voiceItem.Text = Loc.T("음성으로 알려주기 (완료·확인 필요·컨텍스트)", "Voice alerts (done · needs input · context)");
             testItem.Text = Loc.T("알림 들어보기", "Test notification");
             _autostartItem.Text = Loc.T("Windows 시작 시 실행", "Start with Windows");
             _autostartItem.Checked = IsAutostart();
             quitItem.Text = Loc.T("종료", "Quit");
             _soundItem.Checked = _window.IsSoundOn;
-            _voiceItem.Checked = _window.IsVoiceOn;
         };
 
         _icon = new Forms.NotifyIcon

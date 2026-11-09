@@ -11,10 +11,10 @@
     <RootNamespace>ClaudeSessionOverlay</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>..\assets\icon\app.ico</ApplicationIcon>
-    <Version>0.2.5</Version>
+    <Version>0.2.6</Version>
     <Product>Agent Overlay</Product>
-    <Description>Always-on-top Windows overlay for Claude Code sessions</Description>
-    <Copyright>Copyright (c) 2026 jsuk10</Copyright>
+    <Description>Always-on-top desktop overlay for Claude Code and Antigravity sessions</Description>
+    <Copyright>Copyright (c) 2026 KillianTR / jsuk10</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,15 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Speech" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\core\ClaudeSessionOverlay.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="..\assets\icon\app.ico" LogicalName="app.ico" />
+    <EmbeddedResource Include="..\assets\sound\ios_notification.wav" LogicalName="ios_notification.wav" />
   </ItemGroup>
 
 </Project>

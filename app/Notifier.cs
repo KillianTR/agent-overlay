@@ -1,35 +1,28 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using Microsoft.Win32;
-using System.Speech.Synthesis;
 
 namespace ClaudeSessionOverlay;
 
-/// <summary>세션이 끝나거나 사람을 기다릴 때 짧은 소리와 한국어 음성으로 알린다.</summary>
+/// <summary>
+/// Emite una alerta sonora limpia (estilo iPhone) cuando un agente termina o requiere autorización/entrada.
+/// Sin síntesis de voz (TTS eliminado).
+/// </summary>
 internal sealed class Notifier : IDisposable
 {
-    private static readonly string ChimeFile =
+    private static readonly string WindowsChime =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Media", "Windows Notify System Generic.wav");
 
     private readonly SessionStore _store;
-    private readonly SpeechSynthesizer? _voice;
     private readonly SoundPlayer? _chime;
 
     public Notifier(SessionStore store)
     {
         _store = store;
-        try
-        {
-            _voice = new SpeechSynthesizer();
-            SelectVoice();
-            Loc.Changed += SelectVoice;
-            _voice.SetOutputToDefaultAudioDevice();
-            _voice.Rate = 1;
-        }
-        catch { _voice = null; }
-
         _chime = LoadIosChime();
 
         SystemEvents.SessionSwitch += OnSessionSwitch;
@@ -37,10 +30,43 @@ internal sealed class Notifier : IDisposable
         SystemEvents.SessionEnding += OnSessionEnding;
     }
 
-    // ── 자리에 없을 때는 울리지 않는다: 잠금·로그오프·절전·모니터 꺼짐 ──────
+    private static SoundPlayer? LoadIosChime()
+    {
+        try
+        {
+            var asm = typeof(Notifier).Assembly;
+            using var stream = asm.GetManifestResourceStream("ios_notification.wav");
+            if (stream != null)
+            {
+                var ms = new MemoryStream();
+                stream.CopyTo(ms);
+                ms.Position = 0;
+                var player = new SoundPlayer(ms);
+                player.Load();
+                return player;
+            }
 
-    // 돌아온 직후 밀려 있던 알림이 한꺼번에 울리지 않게 잠깐 더 조용히 있는다
-    private static readonly TimeSpan QuietAfterReturn = TimeSpan.FromSeconds(15);
+            string localWav = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "sound", "ios_notification.wav");
+            if (File.Exists(localWav))
+            {
+                var player = new SoundPlayer(localWav);
+                player.Load();
+                return player;
+            }
+
+            if (File.Exists(WindowsChime))
+            {
+                var player = new SoundPlayer(WindowsChime);
+                player.Load();
+                return player;
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    // ── Silencio si el usuario está ausente: pantalla bloqueada, suspensión o pantalla apagada ──
+    private static readonly TimeSpan QuietAfterReturn = TimeSpan.FromSeconds(10);
 
     private bool _isLocked;
     private bool _isSuspended;
@@ -50,7 +76,6 @@ internal sealed class Notifier : IDisposable
 
     private bool IsAway => _isLocked || _isSuspended || _isDisplayOff || DateTime.Now < _quietUntil;
 
-    /// <summary>모니터 꺼짐/켜짐을 이 창으로 받는다</summary>
     public void WatchDisplay(IntPtr hwnd)
     {
         var guid = Native.GUID_CONSOLE_DISPLAY_STATE;
@@ -64,7 +89,7 @@ internal sealed class Notifier : IDisposable
         {
             var setting = Marshal.PtrToStructure<Native.POWERBROADCAST_SETTING>(lParam);
             if (setting.PowerSetting == Native.GUID_CONSOLE_DISPLAY_STATE)
-                SetAway(ref _isDisplayOff, setting.Data == 0); // 0 꺼짐, 1 켜짐, 2 어둡게
+                SetAway(ref _isDisplayOff, setting.Data == 0);
         }
         return IntPtr.Zero;
     }
@@ -96,71 +121,41 @@ internal sealed class Notifier : IDisposable
     {
         if (flag == isAway) return;
         flag = isAway;
-        if (isAway) _voice?.SpeakAsyncCancelAll(); // 읽던 것도 멈춘다
-        else _quietUntil = DateTime.Now + QuietAfterReturn;
-    }
-
-    /// <summary>화면 언어에 맞는 목소리(없으면 Windows 기본 목소리)</summary>
-    private void SelectVoice()
-    {
-        if (_voice is null) return;
-        string prefix = Loc.IsEnglish ? "en" : "ko";
-        try
-        {
-            var voice = _voice.GetInstalledVoices()
-                .FirstOrDefault(v => v.Enabled && v.VoiceInfo.Culture.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-            if (voice is not null) _voice.SelectVoice(voice.VoiceInfo.Name);
-        }
-        catch (InvalidOperationException) { }
+        if (!isAway) _quietUntil = DateTime.Now + QuietAfterReturn;
     }
 
     public void Announce(IReadOnlyList<Notice> notices)
     {
         if (notices.Count == 0 || IsAway) return;
-        if (_store.State.IsSoundOn) PlayChime();
-        if (!_store.State.IsVoiceOn || _voice is null) return;
-
-        foreach (var notice in notices)
+        if (_store.State.IsSoundOn)
         {
-            _voice.SpeakAsync(Overview.Spoken(notice)); // 차례로 쌓여서 겹치지 않는다
+            PlayChime();
         }
     }
 
     public void Test()
     {
         PlayChime();
-        _voice?.SpeakAsync(Overview.TestSpoken);
     }
 
-    public void SayVoiceOn() => _voice?.SpeakAsync(Overview.VoiceOnSpoken);
-
-    private void PlayChime()
+    public void PlayChime()
     {
-        try { _chime?.Play(); }
-        catch { SystemSounds.Asterisk.Play(); }
+        try
+        {
+            _chime?.Play();
+        }
+        catch
+        {
+            SystemSounds.Asterisk.Play();
+        }
     }
 
     public void Dispose()
     {
-        Loc.Changed -= SelectVoice;
         SystemEvents.SessionSwitch -= OnSessionSwitch;
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         SystemEvents.SessionEnding -= OnSessionEnding;
         if (_displayNotification != IntPtr.Zero) Native.UnregisterPowerSettingNotification(_displayNotification);
-        _voice?.Dispose();
         _chime?.Dispose();
     }
-
-    private static SoundPlayer? LoadIosChime()
-    {
-        try
-        {
-            var stream = typeof(Notifier).Assembly.GetManifestResourceStream("ios_notification.wav");
-            if (stream != null) return new SoundPlayer(stream);
-            if (File.Exists(ChimeFile)) return new SoundPlayer(ChimeFile);
-        }
-        catch { }
-        return null;
-    }
-
 }

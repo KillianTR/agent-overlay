@@ -351,26 +351,25 @@ public partial class MainWindow : Window
     private void ThemeToggle_Click(object sender, RoutedEventArgs e) =>
         SetTheme(ClaudeSessionOverlay.Theme.IsLight ? OverlayTheme.Dark : OverlayTheme.Light);
 
-    private void VoiceToggle_Click(object sender, RoutedEventArgs e) => ToggleVoice();
+    private const string SoundOnGlyph = "\uE767";  // Volume / Sound On
+    private const string SoundOffGlyph = "\uE74F"; // Mute / Sound Off
 
-    /// <summary>'TTS' 글자를 눌러도 스위치처럼</summary>
-    private void VoicePanel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    private void SoundToggle_Click(object sender, RoutedEventArgs e)
     {
-        if (e.OriginalSource is DependencyObject source && FindParent<System.Windows.Controls.Primitives.ToggleButton>(source) is not null) return;
-        ToggleVoice();
+        ToggleSound();
+        ShowFooterButtons();
     }
 
     private void ShowFooterButtons()
     {
         bool isLight = ClaudeSessionOverlay.Theme.IsLight;
-        // 누르면 바뀔 모습을 보여 준다: 다크일 때 해, 라이트일 때 달
         ThemeToggleButton.Content = isLight ? MoonGlyph : SunGlyph;
         ThemeToggleButton.ToolTip = isLight ? Loc.T("다크 모드로", "Switch to dark") : Loc.T("라이트 모드로", "Switch to light");
 
-        bool isVoiceOn = _store.State.IsVoiceOn;
-        VoiceToggle.IsChecked = isVoiceOn;
-        VoicePanel.ToolTip = isVoiceOn ? Loc.T("음성 알림(TTS) 켜짐: 눌러서 끄기", "Voice alerts (TTS) on: click to turn off")
-                                       : Loc.T("음성 알림(TTS) 꺼짐: 눌러서 켜기", "Voice alerts (TTS) off: click to turn on");
+        bool isSoundOn = _store.State.IsSoundOn;
+        SoundToggleButton.Content = isSoundOn ? SoundOnGlyph : SoundOffGlyph;
+        SoundToggleButton.ToolTip = isSoundOn ? Loc.T("알림 소리 켜짐 (클릭하여 끄기)", "Notification sound on (click to mute)")
+                                             : Loc.T("알림 소리 꺼짐 (클릭하여 켜기)", "Notification sound muted (click to unmute)");
     }
 
     private void LanguageItem_Click(object sender, RoutedEventArgs e)
@@ -389,20 +388,11 @@ public partial class MainWindow : Window
     private void HeaderHide_Click(object sender, RoutedEventArgs e) => ToggleUserHidden();
 
     public bool IsSoundOn => _store.State.IsSoundOn;
-    public bool IsVoiceOn => _store.State.IsVoiceOn;
 
     public void ToggleSound()
     {
         _store.State.IsSoundOn = !_store.State.IsSoundOn;
         _store.SaveState();
-    }
-
-    public void ToggleVoice()
-    {
-        _store.State.IsVoiceOn = !_store.State.IsVoiceOn;
-        _store.SaveState();
-        if (_store.State.IsVoiceOn) _notifier.SayVoiceOn();
-        ShowFooterButtons();
     }
 
     public void TestNotice() => _notifier.Test();
